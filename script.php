@@ -117,21 +117,23 @@ $("#enviarLISTADO").click(function () {
 	formulario.push({ name: "mandacorreo", value: 'no' });
 
 	var mandacorreo = "no";
-	$.ajax({
+$.ajax({
 		type: "POST",
 		url: "colaboradores/controlador.php",
 		data: formulario,
 	}).done(function (respuesta) {
-		$('#LISTADOform')[0].reset();
-		
+		var guardadoExitoso = $.trim(respuesta).indexOf('ACTUALIZADO') !== -1;
+		if(guardadoExitoso){
+			$('#LISTADOform')[0].reset();
+		}
+
 		$("#mensajeLISTADO").html(respuesta).show(); // mostrar el mensaje
 
 		// Ocultar después de 5 segundos
 		setTimeout(function () {
 			$("#mensajeLISTADO").fadeOut("slow");
-		}, 2000);
+		}, 4000);
 
-		$('#target9').hide("linear");
 		$("#reset").load(location.href + " #reset");
 		$("#actualizalogo").load(location.href + " #actualizalogo");
 	});
@@ -145,19 +147,19 @@ $("#enviarLISTADO").click(function () {
 			{ name: "mandacorreo", value: 'si' }
 		);
 		
-			$.ajax({
+	$.ajax({
 			type: "POST",
 			url: "colaboradores/controlador.php",
 			data: formulario,
 		}).done(function(respuesta){
+			var guardadoExitoso = $.trim(respuesta).indexOf('ACTUALIZADO') !== -1;
+			if(guardadoExitoso){
 			$('#LISTADOform')[0].reset();
-			if($.trim(respuesta) == 'Ingresado'){
 		$("#mensajeLISTADO").html(respuesta).show(); // mostrar el mensaje
-
 		// Ocultar después de 5 segundos
 		setTimeout(function () {
 			$("#mensajeLISTADO").fadeOut("slow");
-		}, 2000);
+		}, 4000);
 		$('#target9').hide("linear");
 		$("#reset").load(location.href + " #reset");
 		$("#actualizalogo").load(location.href + " #actualizalogo");
