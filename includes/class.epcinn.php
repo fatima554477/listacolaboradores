@@ -1769,9 +1769,11 @@ Insurgentes Sur 1377 - 3 Col. Insurgentes Mixcoac Benito Juárez, CDMX, México 
 		$nombrearchivo = $_FILES[$archivo]["name"];
 		$tamanyoarchivo = $_FILES[$archivo]["size"];
 		$tipoarchivo = getimagesize($nombretemp);
+        $nombrearchivo = basename($nombrearchivo);
 		$extension = explode('.',$nombrearchivo);
 		$cuenta = count($extension) - 1;
-		$nuevonombre =  $archivo.'_'.date('Y_m_d_h_i_s').'.'.$extension[$cuenta];
+		$nuevonombre = $nombrearchivo;
+		 $extension[$cuenta];
 		//echo '1aaaaaaaaaaaaaaaa2'.$extension[$cuenta].'1aaaaaaaaaaaaaaaa2';
 		
 		if( 
@@ -1823,10 +1825,11 @@ Insurgentes Sur 1377 - 3 Col. Insurgentes Mixcoac Benito Juárez, CDMX, México 
 		$nombretemp = $_FILES[$archivo]["tmp_name"];
 		$nombrearchivo = $_FILES[$archivo]["name"];
 		$tamanyoarchivo = $_FILES[$archivo]["size"];
-		//$tipoarchivo = getimagesize($nombretemp);
+		$tipoarchivo = getimagesize($nombretemp);
+        $nombrearchivo = basename($nombrearchivo);
 		$extension = explode('.',$nombrearchivo);
 		$cuenta = count($extension) - 1;
-		$nuevonombre =  $archivo.'_'.date('Y_m_d_h_i_s').'.'.$extension[$cuenta];
+		$nuevonombre = $nombrearchivo;
 		 $extension[$cuenta];
 
 		if(
@@ -1893,9 +1896,10 @@ Insurgentes Sur 1377 - 3 Col. Insurgentes Mixcoac Benito Juárez, CDMX, México 
 		$nombrearchivo = $_FILES[$archivo]["name"];
 		$tamanyoarchivo = $_FILES[$archivo]["size"];
 		$tipoarchivo = getimagesize($nombretemp);
+        $nombrearchivo = basename($nombrearchivo);
 		$extension = explode('.',$nombrearchivo);
 		$cuenta = count($extension) - 1;
-		$nuevonombre =  $archivo.'_'.date('Y_m_d_h_i_s').'.'.$extension[$cuenta];
+		$nuevonombre = $nombrearchivo;
 		 $extension[$cuenta];
 
 		if( 
@@ -3594,35 +3598,51 @@ public function guardarcategoriainventario ( $I_CATEGORIAS , $ICATEGORIAS ){
 	}
 
 
-	public function variablespermisos($MMMMMM,$idtablapersmiso,$CAMPO){
-		$conn = $this->db();
-		if($_SESSION['idempermiso']==true){
-		$VARempresa = 'select PERMISOS from 01empresa where id = "'.$_SESSION['idempermiso'].'" ';
-		}
+    private $cache_variablespermisos = [];
 
-		if($_SESSION['idPROVpermiso']==true){
-		$VARempresa = 'select PERMISOS from 02usuarios where id = "'.$_SESSION['idPROVpermiso'].'" ';
-		}
 
-		if($_SESSION['idcpermiso']==true){
-		$VARempresa = 'select PERMISOS from 06usuarios where id = "'.$_SESSION['idcpermiso'].'" ';
-		}
-		
-		$queryempresa = mysqli_query($conn,$VARempresa) or die('2978P44'.mysqli_error($conn));
-		$rowempresa = mysqli_fetch_array($queryempresa, MYSQLI_ASSOC);		
 
-		$rowempresa['PERMISOS'];
-		$var1 = 'select '.$CAMPO.' from 05permisosindex where 
-		pagina = "'.$idtablapersmiso.'" AND departamento = "'.$rowempresa['PERMISOS'].'" ';
-		$query = mysqli_query($conn,$var1) or die('P44'.mysqli_error($conn));
-		$row = mysqli_fetch_array($query, MYSQLI_ASSOC);
-		if($_SESSION['idempermiso']=='20' or $_SESSION['idempermiso']=='1'){
-		return "si";	
-		}else{
-		return $row[$CAMPO];
-		}
-		//RETURN 'si';
-	}
+    public function variablespermisos($MMMMMM, $idtablapersmiso, $CAMPO){
+
+        // Administradores siempre tienen acceso total - no necesitan consulta
+        if($_SESSION['idempermiso'] == '20' || $_SESSION['idempermiso'] == '1'){
+            return "si";
+        }
+
+        // Clave única para este permiso
+        $cacheKey = $idtablapersmiso . '|' . $CAMPO;
+        if(isset($this->cache_variablespermisos[$cacheKey])){
+            return $this->cache_variablespermisos[$cacheKey];
+        }
+
+        $conn = $this->db();
+
+        if(!empty($_SESSION['idempremiso']) || $_SESSION['idempermiso'] == true){
+            $VARempresa = 'select PERMISOS from 01empresa where id = "'.$_SESSION['idempermiso'].'" ';
+        }
+        if(!empty($_SESSION['idPROVpermiso']) || $_SESSION['idPROVpermiso'] == true){
+            $VARempresa = 'select PERMISOS from 02usuarios where id = "'.$_SESSION['idPROVpermiso'].'" ';
+        }
+        if(!empty($_SESSION['idcpermiso']) || $_SESSION['idcpermiso'] == true){
+            $VARempresa = 'select PERMISOS from 06usuarios where id = "'.$_SESSION['idcpermiso'].'" ';
+        }
+
+        $queryempresa = mysqli_query($conn, $VARempresa) or die('2978P44'.mysqli_error($conn));
+        $rowempresa = mysqli_fetch_array($queryempresa, MYSQLI_ASSOC);
+
+        $var1 = 'select '.$CAMPO.' from 05permisosindex where 
+        pagina = "'.$idtablapersmiso.'" AND departamento = "'.$rowempresa['PERMISOS'].'" ';
+        $query = mysqli_query($conn, $var1) or die('P44'.mysqli_error($conn));
+        $row = mysqli_fetch_array($query, MYSQLI_ASSOC);
+
+        $resultado = $row[$CAMPO];
+
+        // Guardar en cache
+        $this->cache_variablespermisos[$cacheKey] = $resultado;
+
+        return $resultado;
+    }
+
 
     public function lista_plantillas2() {
     $conn = $this->db();
